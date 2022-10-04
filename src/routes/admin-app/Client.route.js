@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const clientController = require('../../controllers/admin-app/client.controller');
+const auth = require('../../middleware/auth.middleware');
+const awaitHandlerFactory = require('../../middleware/awaitHandlerFactory.middleware');
+router.get('/visit',   auth(), awaitHandlerFactory(clientController.getOne));
+router.get('/fullClient',   auth(), awaitHandlerFactory(clientController.getAll));
+router.post('/addClient',  awaitHandlerFactory(clientController.create));
+router.patch('/update/:id', auth(), awaitHandlerFactory(clientController.update));
+router.delete('/delete/:id', auth(), awaitHandlerFactory(clientController.delete));
+module.exports = router;

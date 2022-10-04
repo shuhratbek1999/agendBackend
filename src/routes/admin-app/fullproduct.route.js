@@ -1,0 +1,13 @@
+const express = require('express');
+const router = express.Router();
+const clientController = require('../../controllers/admin-app/fullproduct.controller');
+const auth = require('../../middleware/auth.middleware');
+const awaitHandlerFactory = require('../../middleware/awaitHandlerFactory.middleware');
+router.get('/one/:id',   auth(), awaitHandlerFactory(clientController.getOne));
+router.get('/getAll',   auth(), awaitHandlerFactory(clientController.getAll));
+router.get('/productSearch',   auth(), awaitHandlerFactory(clientController.search));
+router.get('/fullProduct',   auth(), awaitHandlerFactory(clientController.fullproduct));
+router.get('/product',   auth(), awaitHandlerFactory(clientController.product));
+router.post('/create',  awaitHandlerFactory(clientController.create));
+router.delete('/delete/:id', auth(), awaitHandlerFactory(clientController.delete));
+module.exports = router;
