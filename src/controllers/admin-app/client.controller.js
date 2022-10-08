@@ -3,49 +3,71 @@ const HttpException = require('../../utils/HttpException.utils');
 // const status = require('../../utils/status.utils')
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const RegionModel = require('../../models/region.model');
+const districtModel = require('../../models/district.model');
+const villageModel = require('../../models/village.model');
 
 /******************************************************************************
  *                              User Controller
  ******************************************************************************/
 class clientController {
     getOne = async (req, res, next) =>{
+        let time = new Date().getDay();
+        console.log(time);
         const model = await clientModel.findAll({
             raw: true
         })
         if(!model){
             throw new HttpException(404, "bu id da malumot yo\'q")
         }
+        let result = [{"visit": model}]
         res.status(200).send({
-            error: false,
-            error_code: 0,
-            message: 'Hatolik mavjud emas',
-            data: model
+            "error": false,
+            "error_code": 200,
+            "message": "Full Client List",
+            data: result
         });
     }
     getAll = async (req, res, next) => {
-        const model = await clientModel.findAll({raw: true});
+        let time = new Date().getDay();
+        const model = await clientModel.findAll({
+            attributes: ['fullName', 'date_time', 'brandName', 'region', 'country', 'phone', 'loanSum', 'image', 'lat', 'lon', 'contact_person',
+        ],
+        where:{
+           date_time: time
+        },
+        include:[
+            {model: RegionModel, as:'items', attributes: ['name']},
+            {model: districtModel, as:'districts', attributes: ['name']},
+        ] 
+        });
+        let result = []
+        model.forEach(val => {
+            for(let i = 0; i<val.items.length; i++){
+                val.region = val.items[i].dataValues.name;
+                val.district = val.districts.name;
+                const {items, districts, ...data} = val.dataValues;
+                result.push(data)
+            }
+        })
+        
         res.send({
             error: false,
             error_code: 0,
-            message: "malumotlar chiqdi",
-            data: model
+            message: "Visit juma",
+            data: result
         })
     }
     create = async(req, res, next) => {
-        console.log(req.body);
-        let time=Math.floor(new Date().getTime() / 1000)-20000;
+        let time= new Date().getDay() + 2;
         this.checkValidation(req);
         const modell = await clientModel.create({
-            "brandName": req.body.brandName,
+            "brandName": req.body.firstname,
             "fullname": req.body.fullname,
-            "country": req.body.country,
-            "region": req.body.region,
-            "district": req.body.district,
-            "teritory": req.body.teritory,
-            "teritoryId": req.body.teritoryId,
-            "districtId": req.body.districtId,
-            "regionId": req.body.regionId,
-            "countryId": req.body.countryId,
+            "teritoryId": req.body.teritoryKey,
+            "districtId": req.body.districtKey,
+            "regionId": req.body.regionKey,
+            "countryId": req.body.countryKey,
             "phone": req.body.phone,
             "loanSum": req.body.loanSum,
             "loanDollar": req.body.loanDollar,
@@ -56,6 +78,7 @@ class clientController {
             "showActions": req.body.showActions,
             "date_time": time
         });
+        
         res.send({
             error: false,  
             error_code: 200,

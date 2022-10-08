@@ -3,7 +3,8 @@ const HttpException = require('../../utils/HttpException.utils');
 // const status = require('../../utils/status.utils')
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
+const { sequelize } = require('../../models/fullproduct.model');
 
 /******************************************************************************
  *                              User Controller
@@ -85,9 +86,9 @@ class fullproductController {
         });
         ModelList.forEach(val => {
             if(val.bonus == 0){
-                val.bonus = true
-            } else{
                 val.bonus = false
+            } else{
+                val.bonus = true
             }
         })
         res.send({
@@ -121,9 +122,9 @@ class fullproductController {
         }
         model.forEach(val => {
             if(val.bonus == 0){
-                val.bonus = true
-            } else{
                 val.bonus = false
+            } else{
+                val.bonus = true
             }
         })
         res.send({
@@ -133,28 +134,67 @@ class fullproductController {
             data: model
         })
     }
-
-    product = async(req, res, next) => {
+    
+    checkProduct = async(req, res, next) => {
+       const {items, ...data}  = req.body;
+       let result = [];
+       for(let i =0; i < items.length; i++){
+        console.log(items[i]);
         const model = await fullproductModel.findAll({
             attributes: ['id', 'name', 'unit', 'ostatok', 'ostatokBlok', 'sht','massa', 'bonus', 
             'bonusNorma', 'bonusKolvo', 'price', 'image', 'incomePrice'
             ],
             where:{
-                currencyId: req.query.currencyid
-            },
-            raw: true
+                id: items[i].id,
+                currencyId: data.currencyid,
+                storeId: data.storeid
+            }
+        })
+        model.forEach(val => {
+            result.push(val)
+        }) 
+       }
+       result.forEach(val => {
+         if(val.bonus == 0){
+            val.bonus = false
+         }
+         else{
+            val.bonus = true
+         }
+       })
+       res.send({
+        error: false,
+        error_code: 200,
+        message: "checkProduct",
+        data: result
+    })
+}
+
+    products = async(req, res, next) => {
+        console.log(req.params);
+        const model = await fullproductModel.findAll({
+            attributes: ['id', 'name', 'unit', 'ostatok', 'ostatokBlok', 'sht','massa', 'bonus', 
+            'bonusNorma', 'bonusKolvo', 'price', 'image', 'incomePrice'
+            ],
+            where:{
+                categoryId: req.params.categoryid,
+                subCategoryId: req.params.subcategoryid,
+                currencyId: req.query.currencyid,
+                storeId: req.query.storeid,
+
+            }
         })
         model.forEach(val => {
             if(val.bonus == 0){
-                val.bonus = true
-            } else{
                 val.bonus = false
+            } else{
+                val.bonus = true
             }
         })
         res.send({
-            error: false,
-            error_code: 200,
-            message: "Product list filial:02 Феендо махсулотлари",
+            "error": false,
+            "error_code": 200,
+            "message": "Product list filial:02 Феендо махсулотлари",
             data: model
         })
     }
